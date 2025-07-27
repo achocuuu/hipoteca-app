@@ -39,9 +39,9 @@ def home():
     </form>
     {% if resultado %}
         <h3>Resultado:</h3>
-        <p>UF al día: {{ resultado.uf }}</p>
-        <p>Pie (CLP): ${{ resultado.pie_clp }}</p>
-        <p>Cuota mensual (CLP): ${{ resultado.cuota_clp }}</p>
+        <p>UF al día: {{ "{:,.2f}".format(resultado.uf) }}</p>
+        <p>Pie (CLP): {{ "{:,.0f}".format(resultado.pie_clp) }}</p>
+        <p>Cuota mensual (CLP): {{ "{:,.0f}".format(resultado.cuota_clp) }}</p>
     {% endif %}
     """
     
