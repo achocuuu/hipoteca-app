@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template_string
 import requests
 import datetime as dt
 
@@ -24,18 +24,40 @@ def MortageLoan(fecha_t, valor_propiedad_uf, tasa, financiamiento_porcentual, pl
         "uf": round(uf, 2)
     }
 
-@app.route('/calcular', methods=['GET'])
-def calcular():
-    fecha_str = request.args.get('fecha')  # YYYY-MM-DD
-    fecha_t = dt.datetime.strptime(fecha_str, "%Y-%m-%d")
-    valor_uf = float(request.args.get('valor_propiedad_uf'))
-    tasa = float(request.args.get('tasa'))
-    spread = float(request.args.get('spread', 0.0))
-    pie = float(request.args.get('pie'))
-    plazo = int(request.args.get('plazo'))
+@app.route('/', methods=['GET', 'POST'])
+def home():
+    html = """
+    <h2>Simulador de Crédito Hipotecario</h2>
+    <form method="post">
+        Fecha (YYYY-MM-DD): <input name="fecha" value="2025-07-25"><br>
+        Valor Propiedad UF: <input name="valor" value="5500"><br>
+        Tasa Interés Anual (%): <input name="tasa" value="4.5"><br>
+        Spread CAE (%): <input name="spread" value="0"><br>
+        Pie (% del valor): <input name="pie" value="0"><br>
+        Plazo (años): <input name="plazo" value="30"><br><br>
+        <input type="submit" value="Calcular">
+    </form>
+    {% if resultado %}
+        <h3>Resultado:</h3>
+        <p>UF al día: {{ resultado.uf }}</p>
+        <p>Pie (CLP): ${{ resultado.pie_clp }}</p>
+        <p>Cuota mensual (CLP): ${{ resultado.cuota_clp }}</p>
+    {% endif %}
+    """
+    
+    if request.method == 'POST':
+        fecha = request.form['fecha']
+        valor = float(request.form['valor'])
+        tasa = float(request.form['tasa']) / 100
+        spread = float(request.form['spread']) / 100
+        pie = float(request.form['pie']) / 100
+        plazo = int(request.form['plazo'])
 
-    resultado = MortageLoan(fecha_t, valor_uf, tasa, pie, plazo, spread)
-    return jsonify(resultado)
+        fecha_t = dt.datetime.strptime(fecha, "%Y-%m-%d")
+        resultado = MortageLoan(fecha_t, valor, tasa, pie, plazo, spread)
+        return render_template_string(html, resultado=resultado)
+
+    return render_template_string(html, resultado=None)
 
 if __name__ == '__main__':
     import os
